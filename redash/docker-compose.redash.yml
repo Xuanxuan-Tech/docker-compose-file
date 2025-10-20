@@ -1,0 +1,65 @@
+version: '3.6'
+services:
+  server:
+    image: redash/redash:25.1.0
+    container_name: redash_server
+    depends_on:
+      - postgres
+      - redis
+    ports:
+      - "5000:5000"
+    environment:
+      REDASH_DATABASE_URL: "postgresql://redash:redash@postgres/redash"
+      REDASH_REDIS_URL: "redis://redis:6379/0"
+      REDASH_COOKIE_SECRET: "b3f9d4c2a5e7f860b1d2c7e8f4a9b3d5e6f7c8a9b0d2f3e4c5b6a7d8e9f0b1c2"
+      REDASH_SECRET_KEY: "d9e0f1b2c3a4d5e6f7b8a9c0d1e2f3b4a5c6d7e8f9b0a1c2d3e4f5b6a7c8d9e0"
+    restart: always
+
+  worker:
+    image: redash/redash:25.1.0
+    container_name: redash_worker
+    depends_on:
+      - server
+      - postgres
+      - redis
+    command: worker
+    environment:
+      REDASH_DATABASE_URL: "postgresql://redash:redash@postgres/redash"
+      REDASH_REDIS_URL: "redis://redis:6379/0"
+      REDASH_COOKIE_SECRET: "b3f9d4c2a5e7f860b1d2c7e8f4a9b3d5e6f7c8a9b0d2f3e4c5b6a7d8e9f0b1c2"
+      REDASH_SECRET_KEY: "d9e0f1b2c3a4d5e6f7b8a9c0d1e2f3b4a5c6d7e8f9b0a1c2d3e4f5b6a7c8d9e0"
+    restart: always
+
+  scheduler:
+    image: redash/redash:25.1.0
+    container_name: redash_scheduler
+    depends_on:
+      - server
+      - postgres
+      - redis
+    command: scheduler
+    environment:
+      REDASH_DATABASE_URL: "postgresql://redash:redash@postgres/redash"
+      REDASH_REDIS_URL: "redis://redis:6379/0"
+      REDASH_COOKIE_SECRET: "b3f9d4c2a5e7f860b1d2c7e8f4a9b3d5e6f7c8a9b0d2f3e4c5b6a7d8e9f0b1c2"
+      REDASH_SECRET_KEY: "d9e0f1b2c3a4d5e6f7b8a9c0d1e2f3b4a5c6d7e8f9b0a1c2d3e4f5b6a7c8d9e0"
+    restart: always
+
+  postgres:
+    image: postgres:13
+    container_name: redash_postgres
+    environment:
+      POSTGRES_USER: redash
+      POSTGRES_PASSWORD: redash
+      POSTGRES_DB: redash
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: always
+
+  redis:
+    image: redis:6-alpine
+    container_name: redash_redis
+    restart: always
+
+volumes:
+  postgres_data:
